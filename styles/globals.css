@@ -24,3 +24,32 @@ body {
   color: #0070f3;
   cursor: pointer;
 }
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted #b3b3bf;
+  margin-bottom: 7px;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  color: black;
+  text-align: center;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 3px;
+  padding-right: 3px;
+  border-radius: 16px;
+  width: 200px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -60px;
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  width: 400px;
+}
