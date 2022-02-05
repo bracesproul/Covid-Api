@@ -179,7 +179,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_total_cases = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_total_cases = await browser_total_cases.newPage()
     await page_total_cases.goto(total_cases.URL, { waitUntil: 'networkidle2' });
@@ -241,7 +241,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_total_deaths = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_total_deaths = await browser_total_deaths.newPage()
     await page_total_deaths.goto(total_deaths.URL, { waitUntil: 'networkidle2' });
@@ -303,7 +303,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_current_hospitalized = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_current_hospitalized = await browser_current_hospitalized.newPage()
     await page_current_hospitalized.goto(current_hospitalized.URL, { waitUntil: 'networkidle2' });
@@ -365,7 +365,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_current_icu = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_current_icu = await browser_current_icu.newPage()
     await page_current_icu.goto(current_icu.URL, { waitUntil: 'networkidle2' });
@@ -427,7 +427,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_cases = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_cases = await browser_cases.newPage()
     await page_cases.goto(cases.URL, { waitUntil: 'networkidle2' });
@@ -489,7 +489,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
     
     const browser_deaths = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_deaths = await browser_deaths.newPage()
     await page_deaths.goto(deaths.URL, { waitUntil: 'networkidle2' });
@@ -551,7 +551,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_death_rate_7 = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // // args: ['--no-sandbox']
     })
     const page_death_rate_7 = await browser_death_rate_7.newPage()
     await page_death_rate_7.goto(death_rate_7.URL, { waitUntil: 'networkidle2' });
@@ -613,7 +613,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_cumulative_fatality_rate = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_cumulative_fatality_rate = await browser_cumulative_fatality_rate.newPage()
     await page_cumulative_fatality_rate.goto(cumulative_fatality_rate.URL, { waitUntil: 'networkidle2' });
@@ -676,7 +676,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_new_tests = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_new_tests = await browser_new_tests.newPage()
     await page_new_tests.goto(new_tests.URL, { waitUntil: 'networkidle2' });
@@ -738,7 +738,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_vaccines_administered = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_vaccines_administered = await browser_vaccines_administered.newPage()
     await page_vaccines_administered.goto(vaccines_administered.URL, { waitUntil: 'networkidle2' });
@@ -801,7 +801,7 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
 
     const browser_people_fully_vaccinated = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox']
+        // args: ['--no-sandbox']
     })
     const page_people_fully_vaccinated = await browser_people_fully_vaccinated.newPage()
     await page_people_fully_vaccinated.goto(people_fully_vaccinated.URL, { waitUntil: 'networkidle2' });
