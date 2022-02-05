@@ -1,6 +1,6 @@
 import Cors from 'cors'
 import initMiddleware from '../../../lib/init-middleware'
-import data from '../../../data/data.json'
+
 // Initialize the cors middleware
 const cors = initMiddleware(
   // You can read more about the available options here: https://github.com/expressjs/cors#configuration-options
@@ -15,5 +15,5 @@ export default async function handler(req, res) {
   await cors(req, res)
 
   // Rest of the API logic
-  res.json(data)
+  res.json({ message: "NEW MESSAGE" })
 }
