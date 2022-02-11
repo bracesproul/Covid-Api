@@ -4,7 +4,7 @@ Hannah Ritchie, Edouard Mathieu, Lucas Rodés-Guirao, Cameron Appel, Charlie Gia
 Bobbie Macdonald, Diana Beltekian and Max Roser (2020) - "Coronavirus Pandemic (COVID-19)". 
 Published online at OurWorldInData.org. Retrieved from: 'https://ourworldindata.org/coronavirus' [Online Resource]
 */
-
+/*
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const { deepStrictEqual } = require('assert');
@@ -875,4 +875,6 @@ export async function getStaticProps(context) {
     return {
       props: { message: `Next.js is awesome` }, // will be passed to the page component as props
     }
-  }
+}
+
+*/
