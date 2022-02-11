@@ -5,14 +5,9 @@ Bobbie Macdonald, Diana Beltekian and Max Roser (2020) - "Coronavirus Pandemic (
 Published online at OurWorldInData.org. Retrieved from: 'https://ourworldindata.org/coronavirus' [Online Resource]
 */
 
-import puppeteer from 'puppeteer';
-
 import chromium from "chrome-aws-lambda";
 import playwright from "playwright-core";
-
-// const fs = require('fs');
-// const { writeFile } = require('fs')
-// const { join } = require('path')
+import fs from "fs";
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -261,10 +256,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "total_cases": finalObj_total_cases,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/total_cases.json', JSON.stringify(total_cases_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'total_cases');
-        //});
+        fs.writeFile('./data/total_cases.json', JSON.stringify(total_cases_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'total_cases');
+        });
 /*
         writeFile(join('./data', './total_cases.json', 'ci.yml'), JSON.stringify(total_cases_to_write), (err) => {
             if (err) throw err;
@@ -336,10 +331,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "total_deaths": finalObj_total_deaths,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/total_deaths.json', JSON.stringify(total_deaths_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'total_deaths');
-        //});
+        fs.writeFile('./data/total_deaths.json', JSON.stringify(total_deaths_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'total_deaths');
+        });
 /*
         writeFile(join('./data', './total_deaths.json', 'ci.yml'), JSON.stringify(total_deaths_to_write), (err) => {
             if (err) throw err;
@@ -411,10 +406,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "current_hospitalized": finalObj_current_hospitalized,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/current_hospitalized.json', JSON.stringify(current_hospitalized_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'current_hospitalized');
-        //});
+        fs.writeFile('./data/current_hospitalized.json', JSON.stringify(current_hospitalized_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'current_hospitalized');
+        });
 /*
         writeFile(join('./data', './current_hospitalized.json', 'ci.yml'), JSON.stringify(current_hospitalized_to_write), (err) => {
             if (err) throw err;
@@ -486,10 +481,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "current_icu": finalObj_current_icu,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/current_icu.json', JSON.stringify(current_icu_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'current_icu');
-        //});
+        fs.writeFile('./data/current_icu.json', JSON.stringify(current_icu_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'current_icu');
+        });
 /*
         writeFile(join('./data', './current_icu.json', 'ci.yml'), JSON.stringify(current_icu_to_write), (err) => {
             if (err) throw err;
@@ -559,10 +554,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "cases": finalObj_cases,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/cases.json', JSON.stringify(cases_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'cases');
-        //});
+        fs.writeFile('./data/cases.json', JSON.stringify(cases_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'cases');
+        });
         /*
         writeFile(join('./data', './cases.json', 'ci.yml'), JSON.stringify(cases_to_write), (err) => {
             if (err) throw err;
@@ -634,10 +629,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "deaths": finalObj_deaths,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/deaths.json', JSON.stringify(deaths_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'deaths');
-        //});
+        fs.writeFile('./data/deaths.json', JSON.stringify(deaths_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'deaths');
+        });
 /*
         writeFile(join('./data', './deaths.json', 'ci.yml'), JSON.stringify(deaths_to_write), (err) => {
             if (err) throw err;
@@ -709,10 +704,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "death_rate_7": finalObj_death_rate_7,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/death_rate_7.json', JSON.stringify(death_rate_7_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'death_rate_7');
-        //});
+        fs.writeFile('./data/death_rate_7.json', JSON.stringify(death_rate_7_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'death_rate_7');
+        });
 /*
         writeFile(join('./data', './death_rate_7.json', 'ci.yml'), JSON.stringify(death_rate_7_to_write), (err) => {
             if (err) throw err;
@@ -785,10 +780,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "cumulative_fatality_rate": finalObj_cumulative_fatality_rate,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/cumulative_fatality_rate.json', JSON.stringify(cumulative_fatality_rate_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'cumulative_fatality_rate');
-        //});
+        fs.writeFile('./data/cumulative_fatality_rate.json', JSON.stringify(cumulative_fatality_rate_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'cumulative_fatality_rate');
+        });
 /*
         writeFile(join('./data', './cumulative_fatality_rate.json', 'ci.yml'), JSON.stringify(cumulative_fatality_rate_to_write), (err) => {
             if (err) throw err;
@@ -860,10 +855,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "new_tests": finalObj_new_tests,
             "recent_update": new Date()
     };
-        //fs.writeFile('./data/new_tests.json', JSON.stringify(new_tests_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'new_tests');
-        //});
+        fs.writeFile('./data/new_tests.json', JSON.stringify(new_tests_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'new_tests');
+        });
 /*
         writeFile(join('./data', './new_tests.json', 'ci.yml'), JSON.stringify(new_tests_to_write), (err) => {
             if (err) throw err;
@@ -936,10 +931,10 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "vaccines_administered": finalObj_vaccines_administered,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/vaccines_administered.json', JSON.stringify(vaccines_administered_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'vaccines_administered');
-        //});
+        fs.writeFile('./data/vaccines_administered.json', JSON.stringify(vaccines_administered_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'vaccines_administered');
+        });
 /*
         writeFile(join('./data', './vaccines_administered.json', 'ci.yml'), JSON.stringify(vaccines_administered_to_write), (err) => {
             if (err) throw err;
@@ -1012,27 +1007,17 @@ const getData = async (get_date, total_cases, total_deaths, current_hospitalized
             "people_fully_vaccinated": finalObj_people_fully_vaccinated,
             "recent_update": new Date()
         };
-        //fs.writeFile('./data/people_fully_vaccinated.json', JSON.stringify(people_fully_vaccinated_to_write), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!', 'people_fully_vaccinated');
-        //});
-/*
-        writeFile(join('./data', './people_fully_vaccinated.json', 'ci.yml'), JSON.stringify(people_fully_vaccinated_to_write), (err) => {
+        fs.writeFile('./data/people_fully_vaccinated.json', JSON.stringify(people_fully_vaccinated_to_write), (err) => {
             if (err) throw err;
             console.log('The file has been saved!', 'people_fully_vaccinated');
-        });*/
+        });
     
     
         final.push({ "total_cases": finalObj_total_cases }, { "total_deaths": finalObj_total_deaths }, { "total_hospitalized": finalObj_current_hospitalized }, { "total_icu": finalObj_current_icu }, { "daily_cases": finalObj_cases }, { "daily_deaths": finalObj_deaths }, { "fatality_rate_7_day_avg": finalObj_death_rate_7 }, { "cumulative_fatality_rate": finalObj_cumulative_fatality_rate }, { "daily_tests": finalObj_new_tests }, { "vaccines_administered": finalObj_vaccines_administered }, { "fully_vaccinated_people": finalObj_people_fully_vaccinated });
-        //fs.writeFile('./data/data.json', JSON.stringify(final), (err) => {
-        //    if (err) throw err;
-        //    console.log('The file has been saved!');
-        //});
-        /*
-        writeFile(join('./data', './data.json', 'ci.yml'), JSON.stringify(final), (err) => {
+        fs.writeFile('./data/data.json', JSON.stringify(final), (err) => {
             if (err) throw err;
             console.log('The file has been saved!');
-        });*/
+        });
         console.log('final', final);
     }
     catch (error) {
