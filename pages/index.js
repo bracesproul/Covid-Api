@@ -10,7 +10,8 @@ import puppeteer from 'puppeteer';
 import chromium from "chrome-aws-lambda";
 import playwright from "playwright-core";
 
-import fs from 'fs';
+const fs = require('fs');
+
 import Link from 'next/link';
 import { useState } from 'react';
 const createGroups = (arr, numGroups) => {
