@@ -6,6 +6,10 @@ Published online at OurWorldInData.org. Retrieved from: 'https://ourworldindata.
 */
 
 import puppeteer from 'puppeteer';
+
+import chromium from "chrome-aws-lambda";
+import playwright from "playwright-core";
+
 import fs from 'fs';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -162,714 +166,827 @@ const _PEOPLE_FULLY_VACCINATED = {
     COUNTRY_NAME_TYPE: "td"
 }
 
+/*
+await playwright.chromium.launch({
+    args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? await chromium.executablePath
+        : "/usr/local/bin/chromium",
+    headless:
+      process.env.NODE_ENV === "production" ? chromium.headless : true,
+});
+*/
+
 const getData = async (get_date, total_cases, total_deaths, current_hospitalized, current_icu, cases, deaths, death_rate_7, cumulative_fatality_rate, new_tests, vaccines_administered, people_fully_vaccinated) => {
     let final = [];
     let date;
     
-    const browser_get_date = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_get_date = await browser_get_date.newPage()
-    await page_get_date.goto(get_date.URL, { waitUntil: 'networkidle2' });
-    const options_get_date = await page_get_date.$$eval('th[class="subdimension sortable endSubdimension"] > div', (options_get_date) =>
-        options_get_date.map((option_get_date) => option_get_date.textContent)
-    );
-    date = options_get_date[0];
-    await browser_get_date.close();
+    try {
+
+        const browser_get_date = await playwright.chromium.launch({
+            args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+            executablePath:
+              process.env.NODE_ENV === "production"
+                ? await chromium.executablePath
+                : "/usr/local/bin/chromium",
+            headless:
+              process.env.NODE_ENV === "production" ? chromium.headless : true,
+          });
+        
+        const context_get_date = await browser_get_date.newContext();
+        const page_get_date = await context_get_date.newPage();
+        
+        await page_get_date.goto(get_date.URL, { waitUntil: 'networkidle2' });
+        const options_get_date = await page_get_date.$$eval('th[class="subdimension sortable endSubdimension"] > div', (options_get_date) =>
+            options_get_date.map((option_get_date) => option_get_date.textContent)
+        );
+        date = options_get_date[0];
+        await browser_get_date.close();
+        
     
-
-    const browser_total_cases = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_total_cases = await browser_total_cases.newPage()
-    await page_total_cases.goto(total_cases.URL, { waitUntil: 'networkidle2' });
-    const options_total_cases = await page_total_cases.$$eval('table[class="data-table"] > tbody > tr > td', (options_total_cases) =>
-        options_total_cases.map((option_total_cases) => option_total_cases.textContent)
-    );
-    await browser_total_cases.close();
-    const finalData_total_cases = createGroups(options_total_cases, 228);
-    const finalObj_total_cases = finalData_total_cases.map(item => {
-        let total_cases = item[2];
-        if (!total_cases) {
-            total_cases = 0;
-        } else if (total_cases.includes(", 2022") || total_cases.includes(", 2021") || total_cases.includes(", 2020")) {
-            let last_update = [];
-            let last_update_total_cases = [];
-            last_update.push(total_cases.substring(0, 12));
-            last_update_total_cases.push(total_cases.substring(13));
-            total_cases = [last_update[0], last_update_total_cases[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            total_cases: total_cases,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_total_cases.map(item => {
-        if (!item.iso) {
-            finalObj_total_cases.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const total_cases_to_write = { 
-        "total_cases": finalObj_total_cases,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/total_cases.json', JSON.stringify(total_cases_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'total_cases');
-    });
-
-    const browser_total_deaths = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_total_deaths = await browser_total_deaths.newPage()
-    await page_total_deaths.goto(total_deaths.URL, { waitUntil: 'networkidle2' });
-    const options_total_deaths = await page_total_deaths.$$eval('table[class="data-table"] > tbody > tr > td', (options_total_deaths) =>
-        options_total_deaths.map((option_total_deaths) => option_total_deaths.textContent)
-    );
-    await browser_total_deaths.close();
-    const finalData_total_deaths = createGroups(options_total_deaths, 228);
-    const finalObj_total_deaths = finalData_total_deaths.map(item => {
-        let total_deaths = item[2];
-        if (!total_deaths) {
-            total_deaths = 0;
-        } else if (total_deaths.includes(", 2022") || total_deaths.includes(", 2021") || total_deaths.includes(", 2020")) {
-            let last_update = [];
-            let last_update_total_deaths = [];
-            last_update.push(total_deaths.substring(0, 12));
-            last_update_total_deaths.push(total_deaths.substring(13));
-            total_deaths = [last_update[0], last_update_total_deaths[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            total_deaths: total_deaths,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    }) 
-    finalObj_total_deaths.map(item => {
-        if (!item.iso) {
-            finalObj_total_deaths.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    }) 
-    const total_deaths_to_write = { 
-        "total_deaths": finalObj_total_deaths,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/total_deaths.json', JSON.stringify(total_deaths_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'total_deaths');
-    });
-
-    const browser_current_hospitalized = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_current_hospitalized = await browser_current_hospitalized.newPage()
-    await page_current_hospitalized.goto(current_hospitalized.URL, { waitUntil: 'networkidle2' });
-    const options_current_hospitalized = await page_current_hospitalized.$$eval('table[class="data-table"] > tbody > tr > td', (options_current_hospitalized) =>
-        options_current_hospitalized.map((option_current_hospitalized) => option_current_hospitalized.textContent)
-    );
-    await browser_current_hospitalized.close();
-    const finalData_current_hospitalized = createGroups(options_current_hospitalized, 36);
-    const finalObj_current_hospitalized = finalData_current_hospitalized.map(item => {
-        let current_hospitalized = item[2];
-        if (!current_hospitalized) {
-            current_hospitalized = 0;
-        } else if (current_hospitalized.includes(", 2022") || current_hospitalized.includes(", 2021") || current_hospitalized.includes(", 2020")) {
-            let last_update = [];
-            let last_update_current_hospitalized = [];
-            last_update.push(current_hospitalized.substring(0, 12));
-            last_update_current_hospitalized.push(current_hospitalized.substring(13));
-            current_hospitalized = [last_update[0], last_update_current_hospitalized[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            current_hospitalized: current_hospitalized,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_current_hospitalized.map(item => {
-        if (!item.iso) {
-            finalObj_current_hospitalized.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const current_hospitalized_to_write = { 
-        "current_hospitalized": finalObj_current_hospitalized,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/current_hospitalized.json', JSON.stringify(current_hospitalized_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'current_hospitalized');
-    });
-
-    const browser_current_icu = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_current_icu = await browser_current_icu.newPage()
-    await page_current_icu.goto(current_icu.URL, { waitUntil: 'networkidle2' });
-    const options_current_icu = await page_current_icu.$$eval('table[class="data-table"] > tbody > tr > td', (options_current_icu) =>
-        options_current_icu.map((option_current_icu) => option_current_icu.textContent)
-    );
-    await browser_current_icu.close();
-    const finalData_current_icu = createGroups(options_current_icu, 35);
-    const finalObj_current_icu = finalData_current_icu.map(item => {
-        let current_icu = item[2];
-        if (!current_icu) {
-            current_icu = 0;
-        } else if (current_icu.includes(", 2022") || current_icu.includes(", 2021") || current_icu.includes(", 2020")) {
-            let last_update = [];
-            let last_update_current_icu = [];
-            last_update.push(current_icu.substring(0, 12));
-            last_update_current_icu.push(current_icu.substring(13));
-            current_icu = [last_update[0], last_update_current_icu[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            current_icu: current_icu,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_current_icu.map(item => {
-        if (!item.iso) {
-            finalObj_current_icu.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const current_icu_to_write = { 
-        "current_icu": finalObj_current_icu,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/current_icu.json', JSON.stringify(current_icu_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'current_icu');
-    });
-
-    const browser_cases = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_cases = await browser_cases.newPage()
-    await page_cases.goto(cases.URL, { waitUntil: 'networkidle2' });
-    const options_cases = await page_cases.$$eval('table[class="data-table"] > tbody > tr > td', (options_cases) =>
-        options_cases.map((option_cases) => option_cases.textContent)
-    );
-    await browser_cases.close();
-    const finalData_cases = createGroups(options_cases, 228);
-    const finalObj_cases = finalData_cases.map(item => {
-        let cases = item[2];
-        if (!cases) {
-            cases = 0;
-        } else if (cases.includes(", 2022") || cases.includes(", 2021") || cases.includes(", 2020")) {
-            let last_update = [];
-            let last_update_cases = [];
-            last_update.push(cases.substring(0, 12));
-            last_update_cases.push(cases.substring(13));
-            cases = [last_update[0], last_update_cases[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            cases: cases,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_cases.map(item => {
-        if (!item.iso) {
-            finalObj_cases.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const cases_to_write = { 
-        "cases": finalObj_cases,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/cases.json', JSON.stringify(cases_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'cases');
-    });
+        const browser_total_cases = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
     
-    const browser_deaths = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_deaths = await browser_deaths.newPage()
-    await page_deaths.goto(deaths.URL, { waitUntil: 'networkidle2' });
-    const options_deaths = await page_deaths.$$eval('table[class="data-table"] > tbody > tr > td', (options_deaths) =>
-        options_deaths.map((option_deaths) => option_deaths.textContent)
-    );
-    await browser_deaths.close();
-    const finalData_deaths = createGroups(options_deaths, 228);
-    const finalObj_deaths = finalData_deaths.map(item => {
-        let deaths = item[2];
-        if (!deaths) {
-            deaths = 0;
-        } else if (deaths.includes(", 2022") || deaths.includes(", 2021") || deaths.includes(", 2020")) {
-            let last_update = [];
-            let last_update_deaths = [];
-            last_update.push(deaths.substring(0, 12));
-            last_update_deaths.push(deaths.substring(13));
-            deaths = [last_update[0], last_update_deaths[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            deaths: deaths,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_deaths.map(item => {
-        if (!item.iso) {
-            finalObj_deaths.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
+        const context_total_cases = await browser_total_cases.newContext();
+        const page_total_cases = await context_total_cases.newPage();
+        await page_total_cases.goto(total_cases.URL, { waitUntil: 'networkidle2' });
+        const options_total_cases = await page_total_cases.$$eval('table[class="data-table"] > tbody > tr > td', (options_total_cases) =>
+            options_total_cases.map((option_total_cases) => option_total_cases.textContent)
+        );
+        await browser_total_cases.close();
+        const finalData_total_cases = createGroups(options_total_cases, 228);
+        const finalObj_total_cases = finalData_total_cases.map(item => {
+            let total_cases = item[2];
+            if (!total_cases) {
+                total_cases = 0;
+            } else if (total_cases.includes(", 2022") || total_cases.includes(", 2021") || total_cases.includes(", 2020")) {
+                let last_update = [];
+                let last_update_total_cases = [];
+                last_update.push(total_cases.substring(0, 12));
+                last_update_total_cases.push(total_cases.substring(13));
+                total_cases = [last_update[0], last_update_total_cases[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
                 } else return;
             })
-        }
-    })
-    const deaths_to_write = { 
-        "deaths": finalObj_deaths,
-        "recent_update": new Date()
+    
+            const dataV = {
+                country: item[0],
+                total_cases: total_cases,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_total_cases.map(item => {
+            if (!item.iso) {
+                finalObj_total_cases.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const total_cases_to_write = { 
+            "total_cases": finalObj_total_cases,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/total_cases.json', JSON.stringify(total_cases_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'total_cases');
+        });
+    
+        const browser_total_deaths = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_total_deaths = await browser_total_deaths.newContext();
+        const page_total_deaths = await context_total_deaths.newPage();
+        
+        await page_total_deaths.goto(total_deaths.URL, { waitUntil: 'networkidle2' });
+        const options_total_deaths = await page_total_deaths.$$eval('table[class="data-table"] > tbody > tr > td', (options_total_deaths) =>
+            options_total_deaths.map((option_total_deaths) => option_total_deaths.textContent)
+        );
+        await browser_total_deaths.close();
+        const finalData_total_deaths = createGroups(options_total_deaths, 228);
+        const finalObj_total_deaths = finalData_total_deaths.map(item => {
+            let total_deaths = item[2];
+            if (!total_deaths) {
+                total_deaths = 0;
+            } else if (total_deaths.includes(", 2022") || total_deaths.includes(", 2021") || total_deaths.includes(", 2020")) {
+                let last_update = [];
+                let last_update_total_deaths = [];
+                last_update.push(total_deaths.substring(0, 12));
+                last_update_total_deaths.push(total_deaths.substring(13));
+                total_deaths = [last_update[0], last_update_total_deaths[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                total_deaths: total_deaths,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        }) 
+        finalObj_total_deaths.map(item => {
+            if (!item.iso) {
+                finalObj_total_deaths.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        }) 
+        const total_deaths_to_write = { 
+            "total_deaths": finalObj_total_deaths,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/total_deaths.json', JSON.stringify(total_deaths_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'total_deaths');
+        });
+    
+        const browser_current_hospitalized = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_current_hospitalized = await browser_current_hospitalized.newContext();
+        const page_current_hospitalized = await context_current_hospitalized.newPage();
+        
+        await page_current_hospitalized.goto(current_hospitalized.URL, { waitUntil: 'networkidle2' });
+        const options_current_hospitalized = await page_current_hospitalized.$$eval('table[class="data-table"] > tbody > tr > td', (options_current_hospitalized) =>
+            options_current_hospitalized.map((option_current_hospitalized) => option_current_hospitalized.textContent)
+        );
+        await browser_current_hospitalized.close();
+        const finalData_current_hospitalized = createGroups(options_current_hospitalized, 36);
+        const finalObj_current_hospitalized = finalData_current_hospitalized.map(item => {
+            let current_hospitalized = item[2];
+            if (!current_hospitalized) {
+                current_hospitalized = 0;
+            } else if (current_hospitalized.includes(", 2022") || current_hospitalized.includes(", 2021") || current_hospitalized.includes(", 2020")) {
+                let last_update = [];
+                let last_update_current_hospitalized = [];
+                last_update.push(current_hospitalized.substring(0, 12));
+                last_update_current_hospitalized.push(current_hospitalized.substring(13));
+                current_hospitalized = [last_update[0], last_update_current_hospitalized[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                current_hospitalized: current_hospitalized,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_current_hospitalized.map(item => {
+            if (!item.iso) {
+                finalObj_current_hospitalized.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const current_hospitalized_to_write = { 
+            "current_hospitalized": finalObj_current_hospitalized,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/current_hospitalized.json', JSON.stringify(current_hospitalized_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'current_hospitalized');
+        });
+    
+        const browser_current_icu = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_current_icu = await browser_current_icu.newContext();
+        const page_current_icu = await context_current_icu.newPage();
+        
+        await page_current_icu.goto(current_icu.URL, { waitUntil: 'networkidle2' });
+        const options_current_icu = await page_current_icu.$$eval('table[class="data-table"] > tbody > tr > td', (options_current_icu) =>
+            options_current_icu.map((option_current_icu) => option_current_icu.textContent)
+        );
+        await browser_current_icu.close();
+        const finalData_current_icu = createGroups(options_current_icu, 35);
+        const finalObj_current_icu = finalData_current_icu.map(item => {
+            let current_icu = item[2];
+            if (!current_icu) {
+                current_icu = 0;
+            } else if (current_icu.includes(", 2022") || current_icu.includes(", 2021") || current_icu.includes(", 2020")) {
+                let last_update = [];
+                let last_update_current_icu = [];
+                last_update.push(current_icu.substring(0, 12));
+                last_update_current_icu.push(current_icu.substring(13));
+                current_icu = [last_update[0], last_update_current_icu[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                current_icu: current_icu,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_current_icu.map(item => {
+            if (!item.iso) {
+                finalObj_current_icu.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const current_icu_to_write = { 
+            "current_icu": finalObj_current_icu,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/current_icu.json', JSON.stringify(current_icu_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'current_icu');
+        });
+    
+        const browser_cases = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+        
+        const page_cases = await browser_cases.newPage()
+        await page_cases.goto(cases.URL, { waitUntil: 'networkidle2' });
+        const options_cases = await page_cases.$$eval('table[class="data-table"] > tbody > tr > td', (options_cases) =>
+            options_cases.map((option_cases) => option_cases.textContent)
+        );
+        await browser_cases.close();
+        const finalData_cases = createGroups(options_cases, 228);
+        const finalObj_cases = finalData_cases.map(item => {
+            let cases = item[2];
+            if (!cases) {
+                cases = 0;
+            } else if (cases.includes(", 2022") || cases.includes(", 2021") || cases.includes(", 2020")) {
+                let last_update = [];
+                let last_update_cases = [];
+                last_update.push(cases.substring(0, 12));
+                last_update_cases.push(cases.substring(13));
+                cases = [last_update[0], last_update_cases[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                cases: cases,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_cases.map(item => {
+            if (!item.iso) {
+                finalObj_cases.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const cases_to_write = { 
+            "cases": finalObj_cases,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/cases.json', JSON.stringify(cases_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'cases');
+        });
+        
+        const browser_deaths = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_deaths = await browser_deaths.newContext();
+        const page_deaths = await context_deaths.newPage();
+        
+        await page_deaths.goto(deaths.URL, { waitUntil: 'networkidle2' });
+        const options_deaths = await page_deaths.$$eval('table[class="data-table"] > tbody > tr > td', (options_deaths) =>
+            options_deaths.map((option_deaths) => option_deaths.textContent)
+        );
+        await browser_deaths.close();
+        const finalData_deaths = createGroups(options_deaths, 228);
+        const finalObj_deaths = finalData_deaths.map(item => {
+            let deaths = item[2];
+            if (!deaths) {
+                deaths = 0;
+            } else if (deaths.includes(", 2022") || deaths.includes(", 2021") || deaths.includes(", 2020")) {
+                let last_update = [];
+                let last_update_deaths = [];
+                last_update.push(deaths.substring(0, 12));
+                last_update_deaths.push(deaths.substring(13));
+                deaths = [last_update[0], last_update_deaths[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                deaths: deaths,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_deaths.map(item => {
+            if (!item.iso) {
+                finalObj_deaths.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const deaths_to_write = { 
+            "deaths": finalObj_deaths,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/deaths.json', JSON.stringify(deaths_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'deaths');
+        });
+    
+        const browser_death_rate_7 = await playwright.chromium.launch({
+            args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+            executablePath:
+              process.env.NODE_ENV === "production"
+                ? await chromium.executablePath
+                : "/usr/local/bin/chromium",
+            headless:
+              process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_death_rate_7 = await browser_death_rate_7.newContext();
+        const page_death_rate_7 = await context_death_rate_7.newPage();
+    
+        await page_death_rate_7.goto(death_rate_7.URL, { waitUntil: 'networkidle2' });
+        const options_death_rate_7 = await page_death_rate_7.$$eval('table[class="data-table"] > tbody > tr > td', (options_death_rate_7) =>
+            options_death_rate_7.map((option_death_rate_7) => option_death_rate_7.textContent)
+        );
+        await browser_death_rate_7.close();
+        const finalData_death_rate_7 = createGroups(options_death_rate_7, 228);
+        const finalObj_death_rate_7 = finalData_death_rate_7.map(item => {
+            let death_rate_7 = item[2];
+            if (!death_rate_7) {
+                death_rate_7 = 0;
+            } else if (death_rate_7.includes(", 2022") || death_rate_7.includes(", 2021") || death_rate_7.includes(", 2020")) {
+                let last_update = [];
+                let last_update_death_rate_7 = [];
+                last_update.push(death_rate_7.substring(0, 12));
+                last_update_death_rate_7.push(death_rate_7.substring(13));
+                death_rate_7 = [last_update[0], last_update_death_rate_7[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                death_rate_7: death_rate_7,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_death_rate_7.map(item => {
+            if (!item.iso) {
+                finalObj_death_rate_7.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const death_rate_7_to_write = { 
+            "death_rate_7": finalObj_death_rate_7,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/death_rate_7.json', JSON.stringify(death_rate_7_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'death_rate_7');
+        });
+    
+        const browser_cumulative_fatality_rate = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_cumulative_fatality_rate = await browser_cumulative_fatality_rate.newContext();
+        const page_cumulative_fatality_rate = await context_cumulative_fatality_rate.newPage();
+        
+        await page_cumulative_fatality_rate.goto(cumulative_fatality_rate.URL, { waitUntil: 'networkidle2' });
+        const options_cumulative_fatality_rate = await page_cumulative_fatality_rate.$$eval('table[class="data-table"] > tbody > tr > td', (options_cumulative_fatality_rate) =>
+            options_cumulative_fatality_rate.map((option_cumulative_fatality_rate) => option_cumulative_fatality_rate.textContent)
+        );
+        await browser_cumulative_fatality_rate.close();
+        const finalData_cumulative_fatality_rate = createGroups(options_cumulative_fatality_rate, 228);
+        const finalObj_cumulative_fatality_rate = finalData_cumulative_fatality_rate.map(item => {
+            let cumulative_fatality_rate = item[2];
+            if (!cumulative_fatality_rate) {
+                cumulative_fatality_rate = 0;
+            } else if (cumulative_fatality_rate.includes(", 2022") || cumulative_fatality_rate.includes(", 2021") || cumulative_fatality_rate.includes(", 2020")) {
+                let last_update = [];
+                let last_update_cumulative_fatality_rate = [];
+                last_update.push(cumulative_fatality_rate.substring(0, 12));
+                last_update_cumulative_fatality_rate.push(cumulative_fatality_rate.substring(13));
+                cumulative_fatality_rate = [last_update[0], last_update_cumulative_fatality_rate[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+    
+            const dataV = {
+                country: item[0],
+                cumulative_fatality_rate: cumulative_fatality_rate,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_cumulative_fatality_rate.map(item => {
+            if (!item.iso) {
+                finalObj_cumulative_fatality_rate.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const cumulative_fatality_rate_to_write = { 
+            "cumulative_fatality_rate": finalObj_cumulative_fatality_rate,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/cumulative_fatality_rate.json', JSON.stringify(cumulative_fatality_rate_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'cumulative_fatality_rate');
+        });
+    
+        const browser_new_tests = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_new_tests = await browser_new_tests.newContext();
+        const page_new_tests = await context_new_tests.newPage();
+        
+        await page_new_tests.goto(new_tests.URL, { waitUntil: 'networkidle2' });
+        const options_new_tests = await page_new_tests.$$eval('table[class="data-table"] > tbody > tr > td', (options_new_tests) =>
+            options_new_tests.map((option_new_tests) => option_new_tests.textContent)
+        );
+        await browser_new_tests.close();
+        const finalData_new_tests = createGroups(options_new_tests, 135);
+        const finalObj_new_tests = finalData_new_tests.map(item => {
+            let new_tests = item[2];
+            if (!new_tests) {
+                new_tests = 0;
+            } else if (new_tests.includes(", 2022") || new_tests.includes(", 2021") || new_tests.includes(", 2020")) {
+                let last_update = [];
+                let last_update_new_tests = [];
+                last_update.push(new_tests.substring(0, 12));
+                last_update_new_tests.push(new_tests.substring(13));
+                new_tests = [last_update[0], last_update_new_tests[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
+                } else return;
+            })
+    
+            const dataV = {
+                country: item[0],
+                new_tests: new_tests,
+                iso: iso,
+                date: date
+            }
+            return dataV
+        })
+        finalObj_new_tests.map(item => {
+            if (!item.iso) {
+                finalObj_new_tests.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const new_tests_to_write = { 
+            "new_tests": finalObj_new_tests,
+            "recent_update": new Date()
     };
-    fs.writeFile('./data/deaths.json', JSON.stringify(deaths_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'deaths');
-    });
-
-    const browser_death_rate_7 = await puppeteer.launch({
-        headless: true,
-        // args: ['--no-sandbox']
-    })
-    const page_death_rate_7 = await browser_death_rate_7.newPage()
-    await page_death_rate_7.goto(death_rate_7.URL, { waitUntil: 'networkidle2' });
-    const options_death_rate_7 = await page_death_rate_7.$$eval('table[class="data-table"] > tbody > tr > td', (options_death_rate_7) =>
-        options_death_rate_7.map((option_death_rate_7) => option_death_rate_7.textContent)
-    );
-    await browser_death_rate_7.close();
-    const finalData_death_rate_7 = createGroups(options_death_rate_7, 228);
-    const finalObj_death_rate_7 = finalData_death_rate_7.map(item => {
-        let death_rate_7 = item[2];
-        if (!death_rate_7) {
-            death_rate_7 = 0;
-        } else if (death_rate_7.includes(", 2022") || death_rate_7.includes(", 2021") || death_rate_7.includes(", 2020")) {
-            let last_update = [];
-            let last_update_death_rate_7 = [];
-            last_update.push(death_rate_7.substring(0, 12));
-            last_update_death_rate_7.push(death_rate_7.substring(13));
-            death_rate_7 = [last_update[0], last_update_death_rate_7[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-        const dataV = {
-            country: item[0],
-            death_rate_7: death_rate_7,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_death_rate_7.map(item => {
-        if (!item.iso) {
-            finalObj_death_rate_7.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
+        fs.writeFile('./data/new_tests.json', JSON.stringify(new_tests_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'new_tests');
+        });
+    
+        const browser_vaccines_administered = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_vaccines_administered = await browser_vaccines_administered.newContext();
+        const page_vaccines_administered = await context_vaccines_administered.newPage();
+        
+        await page_vaccines_administered.goto(vaccines_administered.URL, { waitUntil: 'networkidle2' });
+        const options_vaccines_administered = await page_vaccines_administered.$$eval('table[class="data-table"] > tbody > tr > td', (options_vaccines_administered) =>
+            options_vaccines_administered.map((option_vaccines_administered) => option_vaccines_administered.textContent)
+        );
+        await browser_vaccines_administered.close();
+        const finalData_vaccines_administered = createGroups(options_vaccines_administered, 231);
+        const finalObj_vaccines_administered = finalData_vaccines_administered.map(item => {
+            let vaccines_administered = item[2];
+            if (!vaccines_administered) {
+                vaccines_administered = 0;
+            } else if (vaccines_administered.includes(", 2022") || vaccines_administered.includes(", 2021") || vaccines_administered.includes(", 2020")) {
+                let last_update = [];
+                let last_update_vaccines_administered = [];
+                last_update.push(vaccines_administered.substring(0, 12));
+                last_update_vaccines_administered.push(vaccines_administered.substring(13));
+                vaccines_administered = [last_update[0], last_update_vaccines_administered[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
                 } else return;
             })
-        }
-    })
-    const death_rate_7_to_write = { 
-        "death_rate_7": finalObj_death_rate_7,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/death_rate_7.json', JSON.stringify(death_rate_7_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'death_rate_7');
-    });
-
-    const browser_cumulative_fatality_rate = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_cumulative_fatality_rate = await browser_cumulative_fatality_rate.newPage()
-    await page_cumulative_fatality_rate.goto(cumulative_fatality_rate.URL, { waitUntil: 'networkidle2' });
-    const options_cumulative_fatality_rate = await page_cumulative_fatality_rate.$$eval('table[class="data-table"] > tbody > tr > td', (options_cumulative_fatality_rate) =>
-        options_cumulative_fatality_rate.map((option_cumulative_fatality_rate) => option_cumulative_fatality_rate.textContent)
-    );
-    await browser_cumulative_fatality_rate.close();
-    const finalData_cumulative_fatality_rate = createGroups(options_cumulative_fatality_rate, 228);
-    const finalObj_cumulative_fatality_rate = finalData_cumulative_fatality_rate.map(item => {
-        let cumulative_fatality_rate = item[2];
-        if (!cumulative_fatality_rate) {
-            cumulative_fatality_rate = 0;
-        } else if (cumulative_fatality_rate.includes(", 2022") || cumulative_fatality_rate.includes(", 2021") || cumulative_fatality_rate.includes(", 2020")) {
-            let last_update = [];
-            let last_update_cumulative_fatality_rate = [];
-            last_update.push(cumulative_fatality_rate.substring(0, 12));
-            last_update_cumulative_fatality_rate.push(cumulative_fatality_rate.substring(13));
-            cumulative_fatality_rate = [last_update[0], last_update_cumulative_fatality_rate[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
+    
+    
+            const dataV = {
+                country: item[0],
+                vaccines_administered: vaccines_administered,
+                iso: iso,
+                date: date
+            }
+            return dataV
         })
-
-
-        const dataV = {
-            country: item[0],
-            cumulative_fatality_rate: cumulative_fatality_rate,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_cumulative_fatality_rate.map(item => {
-        if (!item.iso) {
-            finalObj_cumulative_fatality_rate.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
+        finalObj_vaccines_administered.map(item => {
+            if (!item.iso) {
+                finalObj_vaccines_administered.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
+        })
+        const vaccines_administered_to_write = { 
+            "vaccines_administered": finalObj_vaccines_administered,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/vaccines_administered.json', JSON.stringify(vaccines_administered_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'vaccines_administered');
+        });
+    
+        const browser_people_fully_vaccinated = await playwright.chromium.launch({
+        args: [...chromium.args, "--font-render-hinting=none"], // This way fix rendering issues with specific fonts
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? await chromium.executablePath
+            : "/usr/local/bin/chromium",
+        headless:
+          process.env.NODE_ENV === "production" ? chromium.headless : true,
+        });
+    
+        const context_people_fully_vaccinated = await browser_people_fully_vaccinated.newContext();
+        const page_people_fully_vaccinated = await context_people_fully_vaccinated.newPage();
+        
+        await page_people_fully_vaccinated.goto(people_fully_vaccinated.URL, { waitUntil: 'networkidle2' });
+        const options_people_fully_vaccinated = await page_people_fully_vaccinated.$$eval('table[class="data-table"] > tbody > tr > td', (options_people_fully_vaccinated) =>
+            options_people_fully_vaccinated.map((option_people_fully_vaccinated) => option_people_fully_vaccinated.textContent)
+        );
+        await browser_people_fully_vaccinated.close();
+        const finalData_people_fully_vaccinated = createGroups(options_people_fully_vaccinated, 231);
+        const finalObj_people_fully_vaccinated = finalData_people_fully_vaccinated.map(item => {
+            let people_fully_vaccinated = item[2];
+            if (!people_fully_vaccinated) {
+                people_fully_vaccinated = 0;
+            } else if (people_fully_vaccinated.includes(", 2022") || people_fully_vaccinated.includes(", 2021") || people_fully_vaccinated.includes(", 2020")) {
+                let last_update = [];
+                let last_update_people_fully_vaccinated = [];
+                last_update.push(people_fully_vaccinated.substring(0, 12));
+                last_update_people_fully_vaccinated.push(people_fully_vaccinated.substring(13));
+                people_fully_vaccinated = [last_update[0], last_update_people_fully_vaccinated[0]];
+            }
+            let iso;
+            countryList.filter(country => {
+                if (country.name === item[0]) {
+                    iso = country.iso;
                 } else return;
             })
-        }
-    })
-    const cumulative_fatality_rate_to_write = { 
-        "cumulative_fatality_rate": finalObj_cumulative_fatality_rate,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/cumulative_fatality_rate.json', JSON.stringify(cumulative_fatality_rate_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'cumulative_fatality_rate');
-    });
-
-    const browser_new_tests = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_new_tests = await browser_new_tests.newPage()
-    await page_new_tests.goto(new_tests.URL, { waitUntil: 'networkidle2' });
-    const options_new_tests = await page_new_tests.$$eval('table[class="data-table"] > tbody > tr > td', (options_new_tests) =>
-        options_new_tests.map((option_new_tests) => option_new_tests.textContent)
-    );
-    await browser_new_tests.close();
-    const finalData_new_tests = createGroups(options_new_tests, 135);
-    const finalObj_new_tests = finalData_new_tests.map(item => {
-        let new_tests = item[2];
-        if (!new_tests) {
-            new_tests = 0;
-        } else if (new_tests.includes(", 2022") || new_tests.includes(", 2021") || new_tests.includes(", 2020")) {
-            let last_update = [];
-            let last_update_new_tests = [];
-            last_update.push(new_tests.substring(0, 12));
-            last_update_new_tests.push(new_tests.substring(13));
-            new_tests = [last_update[0], last_update_new_tests[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
+    
+    
+            const dataV = {
+                country: item[0],
+                people_fully_vaccinated: people_fully_vaccinated,
+                iso: iso,
+                date: date
+            }
+            return dataV
         })
-
-        const dataV = {
-            country: item[0],
-            new_tests: new_tests,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_new_tests.map(item => {
-        if (!item.iso) {
-            finalObj_new_tests.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const new_tests_to_write = { 
-        "new_tests": finalObj_new_tests,
-        "recent_update": new Date()
-};
-    fs.writeFile('./data/new_tests.json', JSON.stringify(new_tests_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'new_tests');
-    });
-
-    const browser_vaccines_administered = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_vaccines_administered = await browser_vaccines_administered.newPage()
-    await page_vaccines_administered.goto(vaccines_administered.URL, { waitUntil: 'networkidle2' });
-    const options_vaccines_administered = await page_vaccines_administered.$$eval('table[class="data-table"] > tbody > tr > td', (options_vaccines_administered) =>
-        options_vaccines_administered.map((option_vaccines_administered) => option_vaccines_administered.textContent)
-    );
-    await browser_vaccines_administered.close();
-    const finalData_vaccines_administered = createGroups(options_vaccines_administered, 231);
-    const finalObj_vaccines_administered = finalData_vaccines_administered.map(item => {
-        let vaccines_administered = item[2];
-        if (!vaccines_administered) {
-            vaccines_administered = 0;
-        } else if (vaccines_administered.includes(", 2022") || vaccines_administered.includes(", 2021") || vaccines_administered.includes(", 2020")) {
-            let last_update = [];
-            let last_update_vaccines_administered = [];
-            last_update.push(vaccines_administered.substring(0, 12));
-            last_update_vaccines_administered.push(vaccines_administered.substring(13));
-            vaccines_administered = [last_update[0], last_update_vaccines_administered[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
+        finalObj_people_fully_vaccinated.map(item => {
+            if (!item.iso) {
+                finalObj_people_fully_vaccinated.filter(country => {
+                    if (!country.country) return;
+                    if (country.country === item.country) {
+                        let new_iso;
+                        weirdIsoList.map(weirdIso => {
+                            if (weirdIso.country == item.country) {
+                                new_iso = weirdIso.iso;
+                            } else return;
+                        })
+                        item.iso = new_iso;
+                    } else return;
+                })
+            }
         })
+        const people_fully_vaccinated_to_write = { 
+            "people_fully_vaccinated": finalObj_people_fully_vaccinated,
+            "recent_update": new Date()
+        };
+        fs.writeFile('./data/people_fully_vaccinated.json', JSON.stringify(people_fully_vaccinated_to_write), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!', 'people_fully_vaccinated');
+        });
+    
+    
+        final.push({ "total_cases": finalObj_total_cases }, { "total_deaths": finalObj_total_deaths }, { "total_hospitalized": finalObj_current_hospitalized }, { "total_icu": finalObj_current_icu }, { "daily_cases": finalObj_cases }, { "daily_deaths": finalObj_deaths }, { "fatality_rate_7_day_avg": finalObj_death_rate_7 }, { "cumulative_fatality_rate": finalObj_cumulative_fatality_rate }, { "daily_tests": finalObj_new_tests }, { "vaccines_administered": finalObj_vaccines_administered }, { "fully_vaccinated_people": finalObj_people_fully_vaccinated });
+        fs.writeFile('./data/data.json', JSON.stringify(final), (err) => {
+            if (err) throw err;
+            console.log('The file has been saved!');
+        });
+    }
+    catch (error) {
+        console.error(error);
+    }
 
 
-        const dataV = {
-            country: item[0],
-            vaccines_administered: vaccines_administered,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_vaccines_administered.map(item => {
-        if (!item.iso) {
-            finalObj_vaccines_administered.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const vaccines_administered_to_write = { 
-        "vaccines_administered": finalObj_vaccines_administered,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/vaccines_administered.json', JSON.stringify(vaccines_administered_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'vaccines_administered');
-    });
-
-    const browser_people_fully_vaccinated = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    })
-    const page_people_fully_vaccinated = await browser_people_fully_vaccinated.newPage()
-    await page_people_fully_vaccinated.goto(people_fully_vaccinated.URL, { waitUntil: 'networkidle2' });
-    const options_people_fully_vaccinated = await page_people_fully_vaccinated.$$eval('table[class="data-table"] > tbody > tr > td', (options_people_fully_vaccinated) =>
-        options_people_fully_vaccinated.map((option_people_fully_vaccinated) => option_people_fully_vaccinated.textContent)
-    );
-    await browser_people_fully_vaccinated.close();
-    const finalData_people_fully_vaccinated = createGroups(options_people_fully_vaccinated, 231);
-    const finalObj_people_fully_vaccinated = finalData_people_fully_vaccinated.map(item => {
-        let people_fully_vaccinated = item[2];
-        if (!people_fully_vaccinated) {
-            people_fully_vaccinated = 0;
-        } else if (people_fully_vaccinated.includes(", 2022") || people_fully_vaccinated.includes(", 2021") || people_fully_vaccinated.includes(", 2020")) {
-            let last_update = [];
-            let last_update_people_fully_vaccinated = [];
-            last_update.push(people_fully_vaccinated.substring(0, 12));
-            last_update_people_fully_vaccinated.push(people_fully_vaccinated.substring(13));
-            people_fully_vaccinated = [last_update[0], last_update_people_fully_vaccinated[0]];
-        }
-        let iso;
-        countryList.filter(country => {
-            if (country.name === item[0]) {
-                iso = country.iso;
-            } else return;
-        })
-
-
-        const dataV = {
-            country: item[0],
-            people_fully_vaccinated: people_fully_vaccinated,
-            iso: iso,
-            date: date
-        }
-        return dataV
-    })
-    finalObj_people_fully_vaccinated.map(item => {
-        if (!item.iso) {
-            finalObj_people_fully_vaccinated.filter(country => {
-                if (!country.country) return;
-                if (country.country === item.country) {
-                    let new_iso;
-                    weirdIsoList.map(weirdIso => {
-                        if (weirdIso.country == item.country) {
-                            new_iso = weirdIso.iso;
-                        } else return;
-                    })
-                    item.iso = new_iso;
-                } else return;
-            })
-        }
-    })
-    const people_fully_vaccinated_to_write = { 
-        "people_fully_vaccinated": finalObj_people_fully_vaccinated,
-        "recent_update": new Date()
-    };
-    fs.writeFile('./data/people_fully_vaccinated.json', JSON.stringify(people_fully_vaccinated_to_write), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!', 'people_fully_vaccinated');
-    });
-
-
-    final.push({ "total_cases": finalObj_total_cases }, { "total_deaths": finalObj_total_deaths }, { "total_hospitalized": finalObj_current_hospitalized }, { "total_icu": finalObj_current_icu }, { "daily_cases": finalObj_cases }, { "daily_deaths": finalObj_deaths }, { "fatality_rate_7_day_avg": finalObj_death_rate_7 }, { "cumulative_fatality_rate": finalObj_cumulative_fatality_rate }, { "daily_tests": finalObj_new_tests }, { "vaccines_administered": finalObj_vaccines_administered }, { "fully_vaccinated_people": finalObj_people_fully_vaccinated });
-    fs.writeFile('./data/data.json', JSON.stringify(final), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!');
-    });
 }
 
 export async function getStaticProps() {
