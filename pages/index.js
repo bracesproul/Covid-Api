@@ -11,8 +11,8 @@ import chromium from "chrome-aws-lambda";
 import playwright from "playwright-core";
 
 // const fs = require('fs');
-const { writeFile } = require('fs')
-const { join } = require('path')
+// const { writeFile } = require('fs')
+// const { join } = require('path')
 
 import Link from 'next/link';
 import { useState } from 'react';
